@@ -15,9 +15,11 @@ import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.matchers.HttpRequestMatcher;
 import org.mockserver.model.*;
+import org.mockserver.scheduler.Scheduler;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -107,7 +109,7 @@ public abstract class AbstractMockingIntegrationTestBase {
 
     @BeforeClass
     public static void createClientAndEventLoopGroup() {
-        clientEventLoopGroup = new NioEventLoopGroup();
+        clientEventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(AbstractMockingIntegrationTestBase.class.getSimpleName() + "-eventLoop"));
         httpClient = new NettyHttpClient(new MockServerLogger(), clientEventLoopGroup, null);
     }
 
@@ -134,7 +136,7 @@ public abstract class AbstractMockingIntegrationTestBase {
         } else {
             for (int i = 0; i < httpRequestMatchers.length; i++) {
                 if (!new HttpRequestMatcher(MOCK_SERVER_LOGGER, httpRequestMatchers[i]).matches(null, httpRequests[i])) {
-                    throw new AssertionError("Request does not match request matcher, expected:<" + httpRequestMatchers[i] + "> but was:<" + httpRequests[i] + ">");
+                    throw new AssertionError("Request does not match request matcher, expected <" + httpRequestMatchers[i] + "> but was:<" + httpRequests[i] + ">, full list requests is: " + Arrays.toString(httpRequestMatchers));
                 }
             }
         }

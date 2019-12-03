@@ -34,13 +34,13 @@ sitemap:
     <li><a href="#button_client_bind_to_additional_free_port">bind</a> additional ports for the proxy to listen on</li>
 </ul>
 
-<a name="rest-api" class="anchor" href="#rest-api">&nbsp;</a>
+<a id="rest-api" class="anchor" href="#rest-api">&nbsp;</a>
 
 <h2>REST API</h2>
 
-<p>The REST API is documented using <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi/5.2.x">Open API specification</a></p>
+<p>The REST API is documented using <a href="https://app.swaggerhub.com/apis/jamesdbloom/mock-server-openapi" target="_blank">Open API 3</a></p>
 
-<a name="java-mockserver-client" class="anchor" href="#java-mockserver-client">&nbsp;</a>
+<a id="java-mockserver-client" class="anchor" href="#java-mockserver-client">&nbsp;</a>
 
 <h2>Java Client</h2>
 
@@ -50,22 +50,22 @@ sitemap:
     <li><a href="#button_client_retrieve_reqs"><strong>org.mockserver.integration.ClientAndServer</strong></a> - starts a local MockServer instance and makes HTTP requests to it</li>
 </ul>
 
-<a name="javascript-mockserver-client" class="anchor" href="#javascript-mockserver-client">&nbsp;</a>
+<a id="javascript-mockserver-client" class="anchor" href="#javascript-mockserver-client">&nbsp;</a>
 
 <h2>JavaScript Client</h2>
 
 <p>The JavaScript client has the following version:</p>
 
 <ul>
-    <li>a browser based API file <a href="https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js"><strong>mockServerClient.js</strong></a></li>
+    <li>a browser based API file <a href="https://rawgit.com/mock-server/mockserver-client-node/mockserver-5.8.0/mockServerClient.js"><strong>mockServerClient.js</strong></a></li>
     <li>a Node.js npm module <a href="https://www.npmjs.org/package/mockserver-client"><strong>mockserver-client</strong></a><br/><a href="https://www.npmjs.org/package/mockserver-client"><img src="https://nodei.co/npm/mockserver-client.png?downloads=true&downloadRank=true&stars=true" alt="mockserver-client-node"/></a></li>
 </ul>
 
 <p>To include the browser based client in an HTML page as follows:</p>
 
-<pre class="prettyprint lang-java code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;</code></pre>
+<pre class="prettyprint lang-java code"><code class="code">&lt;script src=&quot;https://rawgit.com/mock-server/mockserver-client-node/mockserver-5.8.0/mockServerClient.js&quot;&gt;&lt;/script&gt;</code></pre>
 
-<a name="client-code-examples" class="anchor" href="#client-code-examples">&nbsp;</a>
+<a id="client-code-examples" class="anchor" href="#client-code-examples">&nbsp;</a>
 
 <button id="button_client" class="accordion title"><strong>Client Code Examples</strong></button>
 <div class="panel title">
@@ -108,7 +108,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/mock-server/mockserver-client-node/mockserver-5.8.0/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .retrieveRecordedRequests({
@@ -172,7 +172,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/mock-server/mockserver-client-node/mockserver-5.8.0/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .retrieveRecordedRequests({
@@ -228,7 +228,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/mock-server/mockserver-client-node/mockserver-5.8.0/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .retrieveLogMessages({
@@ -293,7 +293,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/mock-server/mockserver-client-node/mockserver-5.8.0/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .verify(
@@ -375,7 +375,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/mock-server/mockserver-client-node/mockserver-5.8.0/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .verifySequence(
@@ -444,7 +444,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/mock-server/mockserver-client-node/mockserver-5.8.0/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .clear({
@@ -496,7 +496,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/mock-server/mockserver-client-node/mockserver-5.8.0/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .clear({
@@ -541,7 +541,7 @@ mockServerClient("localhost", 1080)
         </div>
         <button class="accordion inner">JavaScript: browser mockServerClient.js</button>
         <div class="panel">
-        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/jamesdbloom/mockserver-client-node/mockserver-5.7.2/mockServerClient.js&quot;&gt;&lt;/script&gt;
+        <pre class="prettyprint lang-javascript code"><code class="code">&lt;script src=&quot;https://rawgit.com/mock-server/mockserver-client-node/mockserver-5.8.0/mockServerClient.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
   mockServerClient("localhost", 1080)
     .reset()

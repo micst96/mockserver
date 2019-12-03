@@ -3,6 +3,7 @@ package org.mockserver.proxy;
 import com.google.common.collect.ImmutableSet;
 import io.netty.channel.ChannelHandlerContext;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockserver.log.TimeService;
@@ -14,6 +15,7 @@ import org.mockserver.mock.Expectation;
 import org.mockserver.mock.HttpStateHandler;
 import org.mockserver.mock.action.ActionHandler;
 import org.mockserver.model.HttpRequest;
+import org.mockserver.model.MediaType;
 import org.mockserver.model.RetrieveType;
 import org.mockserver.scheduler.Scheduler;
 import org.mockserver.serialization.ExpectationSerializer;
@@ -60,6 +62,11 @@ public class ProxyServletTest {
 
     private MockHttpServletResponse response;
 
+    @BeforeClass
+    public static void fixTime() {
+        TimeService.fixedTime = true;
+    }
+
     @Before
     public void setupFixture() {
         mockActionHandler = mock(ActionHandler.class);
@@ -85,7 +92,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldRetrieveRequests() throws InterruptedException {
+    public void shouldRetrieveRequests() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -134,7 +141,7 @@ public class ProxyServletTest {
             .withMethod("PUT")
             .withBody(
                 httpRequestSerializer.serialize(request("request_one"))
-            )), is(response().withBody("[]", JSON_UTF_8).withStatusCode(200)));
+            )), is(response().withBody("[]", MediaType.JSON_UTF_8).withStatusCode(200)));
     }
 
     @Test
@@ -172,7 +179,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldStop() throws InterruptedException {
+    public void shouldStop() {
         // given
         MockHttpServletRequest statusRequest = buildHttpServletRequest(
             "PUT",
@@ -188,7 +195,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldRetrieveRecordedExpectations() throws InterruptedException {
+    public void shouldRetrieveRecordedExpectations() {
         // given
         httpStateHandler.log(
             new LogEntry()
@@ -212,7 +219,7 @@ public class ProxyServletTest {
     }
 
     @Test
-    public void shouldRetrieveLogMessages() throws InterruptedException {
+    public void shouldRetrieveLogMessages() {
         // given
         httpStateHandler.log(
             new LogEntry()

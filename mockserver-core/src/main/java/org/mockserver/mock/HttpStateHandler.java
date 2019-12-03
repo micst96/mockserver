@@ -12,6 +12,7 @@ import org.mockserver.serialization.*;
 import org.mockserver.serialization.java.ExpectationToJavaSerializer;
 import org.mockserver.serialization.java.HttpRequestToJavaSerializer;
 import org.mockserver.server.initialize.ExpectationInitializerLoader;
+import org.mockserver.persistence.ExpectationFileSystemPersistence;
 import org.mockserver.verify.Verification;
 import org.mockserver.verify.VerificationSequence;
 import org.slf4j.event.Level;
@@ -25,7 +26,6 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.google.common.net.MediaType.*;
 import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -48,6 +48,7 @@ public class HttpStateHandler {
     private final MockServerEventLog mockServerLog;
     private final Scheduler scheduler;
     private final ExpectationInitializerLoader expectationInitializerLoader;
+    private final ExpectationFileSystemPersistence expectationFileSystemPersistence;
     // mockserver
     private MockServerMatcher mockServerMatcher;
     private final MockServerLogger mockServerLogger;
@@ -76,22 +77,8 @@ public class HttpStateHandler {
         this.verificationSerializer = new VerificationSerializer(mockServerLogger);
         this.verificationSequenceSerializer = new VerificationSequenceSerializer(mockServerLogger);
         this.logEntrySerializer = new LogEntrySerializer(mockServerLogger);
-        this.expectationInitializerLoader = new ExpectationInitializerLoader(mockServerLogger);
-        addExpectationsFromInitializer();
-    }
-
-    private void addExpectationsFromInitializer() {
-        for (Expectation expectation : expectationInitializerLoader.loadExpectations()) {
-            mockServerMatcher.add(expectation);
-            mockServerLogger.logEvent(
-                new LogEntry()
-                    .setType(CREATED_EXPECTATION)
-                    .setLogLevel(Level.INFO)
-                    .setHttpRequest(expectation.getHttpRequest())
-                    .setMessageFormat("creating expectation:{}")
-                    .setArguments(expectation.clone())
-            );
-        }
+        this.expectationInitializerLoader = new ExpectationInitializerLoader(mockServerLogger, mockServerMatcher);
+        this.expectationFileSystemPersistence = new ExpectationFileSystemPersistence(mockServerLogger, mockServerMatcher);
     }
 
     public MockServerLogger getMockServerLogger() {
@@ -224,7 +211,7 @@ public class HttpStateHandler {
                                 }
                             }
                             stringBuffer.append(NEW_LINE);
-                            response.withBody(stringBuffer.toString(), PLAIN_TEXT_UTF_8);
+                            response.withBody(stringBuffer.toString(), MediaType.PLAIN_TEXT_UTF_8);
                             httpResponseFuture.complete(response);
                         });
                         break;
@@ -247,7 +234,7 @@ public class HttpStateHandler {
                                         requests -> {
                                             response.withBody(
                                                 httpRequestToJavaSerializer.serialize(requests),
-                                                create("application", "java").withCharset(UTF_8)
+                                                MediaType.create("application", "java").withCharset(UTF_8)
                                             );
                                             httpResponseFuture.complete(response);
                                         }
@@ -260,7 +247,7 @@ public class HttpStateHandler {
                                         requests -> {
                                             response.withBody(
                                                 httpRequestSerializer.serialize(requests),
-                                                JSON_UTF_8
+                                                MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
                                         }
@@ -273,7 +260,7 @@ public class HttpStateHandler {
                                         logEntries -> {
                                             response.withBody(
                                                 logEntrySerializer.serialize(logEntries),
-                                                JSON_UTF_8
+                                                MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
                                         }
@@ -294,7 +281,7 @@ public class HttpStateHandler {
                         );
                         switch (format) {
                             case JAVA:
-                                response.withBody("JAVA not supported for REQUEST_RESPONSES", create("text", "plain").withCharset(UTF_8));
+                                response.withBody("JAVA not supported for REQUEST_RESPONSES", MediaType.create("text", "plain").withCharset(UTF_8));
                                 httpResponseFuture.complete(response);
                                 break;
                             case JSON:
@@ -304,7 +291,7 @@ public class HttpStateHandler {
                                         requests -> {
                                             response.withBody(
                                                 httpRequestResponseSerializer.serialize(requests),
-                                                JSON_UTF_8
+                                                MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
                                         }
@@ -317,7 +304,7 @@ public class HttpStateHandler {
                                         logEntries -> {
                                             response.withBody(
                                                 logEntrySerializer.serialize(logEntries),
-                                                JSON_UTF_8
+                                                MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
                                         }
@@ -344,7 +331,7 @@ public class HttpStateHandler {
                                         requests -> {
                                             response.withBody(
                                                 expectationToJavaSerializer.serialize(requests),
-                                                create("application", "java").withCharset(UTF_8)
+                                                MediaType.create("application", "java").withCharset(UTF_8)
                                             );
                                             httpResponseFuture.complete(response);
                                         }
@@ -357,7 +344,7 @@ public class HttpStateHandler {
                                         requests -> {
                                             response.withBody(
                                                 expectationSerializer.serialize(requests),
-                                                JSON_UTF_8
+                                                MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
                                         }
@@ -370,7 +357,7 @@ public class HttpStateHandler {
                                         logEntries -> {
                                             response.withBody(
                                                 logEntrySerializer.serialize(logEntries),
-                                                JSON_UTF_8
+                                                MediaType.JSON_UTF_8
                                             );
                                             httpResponseFuture.complete(response);
                                         }
@@ -392,13 +379,13 @@ public class HttpStateHandler {
                         List<Expectation> expectations = mockServerMatcher.retrieveActiveExpectations(httpRequest);
                         switch (format) {
                             case JAVA:
-                                response.withBody(expectationToJavaSerializer.serialize(expectations), create("application", "java").withCharset(UTF_8));
+                                response.withBody(expectationToJavaSerializer.serialize(expectations), MediaType.create("application", "java").withCharset(UTF_8));
                                 break;
                             case JSON:
-                                response.withBody(expectationSerializer.serialize(expectations), JSON_UTF_8);
+                                response.withBody(expectationSerializer.serialize(expectations), MediaType.JSON_UTF_8);
                                 break;
                             case LOG_ENTRIES:
-                                response.withBody("LOG_ENTRIES not supported for ACTIVE_EXPECTATIONS", create("text", "plain").withCharset(UTF_8));
+                                response.withBody("LOG_ENTRIES not supported for ACTIVE_EXPECTATIONS", MediaType.create("text", "plain").withCharset(UTF_8));
                                 break;
                         }
                         httpResponseFuture.complete(response);
@@ -498,7 +485,7 @@ public class HttpStateHandler {
                     responseWriter.writeResponse(request, ACCEPTED);
 
                 } else {
-                    responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
+                    responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
                 }
                 canHandle.complete(true);
             });
@@ -518,7 +505,7 @@ public class HttpStateHandler {
                 if (StringUtils.isEmpty(result)) {
                     responseWriter.writeResponse(request, ACCEPTED);
                 } else {
-                    responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, create("text", "plain").toString());
+                    responseWriter.writeResponse(request, NOT_ACCEPTABLE, result, MediaType.create("text", "plain").toString());
                 }
                 canHandle.complete(true);
             });

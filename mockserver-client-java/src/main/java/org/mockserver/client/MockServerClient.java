@@ -40,12 +40,11 @@ import static org.slf4j.event.Level.*;
 /**
  * @author jamesdbloom
  */
-public class
-MockServerClient implements Stoppable {
+public class MockServerClient implements Stoppable {
 
     private static final MockServerLogger MOCK_SERVER_LOGGER = new MockServerLogger(MockServerClient.class);
     private static final Map<Integer, MockServerEventBus> EVENT_BUS_MAP = new ConcurrentHashMap<>();
-    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(0, new Scheduler.SchedulerThreadFactory(this.getClass().getSimpleName() + "-eventLoop"));
     private final String host;
     private final String contextPath;
     private final Class<MockServerClient> clientClass;
@@ -53,6 +52,7 @@ MockServerClient implements Stoppable {
     private Boolean secure;
     private Integer port;
     private NettyHttpClient nettyHttpClient = new NettyHttpClient(MOCK_SERVER_LOGGER, eventLoopGroup, null);
+    private HttpRequest requestOverride;
     private HttpRequestSerializer httpRequestSerializer = new HttpRequestSerializer(MOCK_SERVER_LOGGER);
     private HttpRequestResponseSerializer httpRequestResponseSerializer = new HttpRequestResponseSerializer(MOCK_SERVER_LOGGER);
     private PortBindingSerializer portBindingSerializer = new PortBindingSerializer(MOCK_SERVER_LOGGER);
@@ -107,6 +107,15 @@ MockServerClient implements Stoppable {
         this.host = host;
         this.port = port;
         this.contextPath = contextPath;
+    }
+
+    public MockServerClient setRequestOverride(HttpRequest requestOverride) {
+        if (requestOverride == null) {
+            throw new IllegalArgumentException("Request with default properties can not be null");
+        } else {
+            this.requestOverride = requestOverride;
+        }
+        return this;
     }
 
     EventLoopGroup getEventLoopGroup() {
@@ -169,7 +178,9 @@ MockServerClient implements Stoppable {
             if (secure != null) {
                 request.withSecure(secure);
             }
-
+            if (requestOverride != null) {
+                request = request.update(requestOverride);
+            }
             HttpResponse response = nettyHttpClient.sendRequest(
                 request.withHeader(HOST.toString(), this.host + ":" + port()),
                 ConfigurationProperties.maxSocketTimeout(),
@@ -224,6 +235,13 @@ MockServerClient implements Stoppable {
                 return isRunning(attempts - 1, timeout, timeUnit);
             }
         } catch (SocketConnectionException | IllegalStateException sce) {
+            MOCK_SERVER_LOGGER.logEvent(
+                new LogEntry()
+                    .setType(LogEntry.LogMessageType.TRACE)
+                    .setLogLevel(DEBUG)
+                    .setMessageFormat("Exception while checking if MockServer is running - " + sce.getMessage())
+                    .setThrowable(sce)
+            );
             return false;
         }
     }
@@ -255,7 +273,7 @@ MockServerClient implements Stoppable {
                     .setType(LogEntry.LogMessageType.TRACE)
                     .setLogLevel(DEBUG)
                     .setMessageFormat("Exception while stopping - " + throwable.getMessage())
-                    .setArguments(throwable)
+                    .setThrowable(throwable)
             );
         }
     }
@@ -647,6 +665,7 @@ MockServerClient implements Stoppable {
      *
      * @param expectations one or more expectations
      */
+    @SuppressWarnings("WeakerAccess")
     public void sendExpectation(Expectation... expectations) {
         for (Expectation expectation : expectations) {
             HttpResponse httpResponse = sendRequest(request().withMethod("PUT").withPath(calculatePath("expectation")).withBody(expectation != null ? expectationSerializer.serialize(expectation) : "", StandardCharsets.UTF_8));

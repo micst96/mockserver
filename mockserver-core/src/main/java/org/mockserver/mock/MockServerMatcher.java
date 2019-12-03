@@ -15,6 +15,7 @@ import org.mockserver.ui.MockServerMatcherNotifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.mockserver.configuration.ConfigurationProperties.maxExpectations;
 import static org.mockserver.metrics.Metrics.Name.*;
@@ -28,7 +29,7 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     private WebSocketClientRegistry webSocketClientRegistry;
     private MatcherBuilder matcherBuilder;
 
-    MockServerMatcher(MockServerLogger logFormatter, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
+    public MockServerMatcher(MockServerLogger logFormatter, Scheduler scheduler, WebSocketClientRegistry webSocketClientRegistry) {
         super(scheduler);
         this.matcherBuilder = new MatcherBuilder(logFormatter);
         this.webSocketClientRegistry = webSocketClientRegistry;
@@ -55,11 +56,19 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     public Expectation firstMatchingExpectation(HttpRequest httpRequest) {
         Expectation matchingExpectation = null;
         for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
+            boolean remainingMatchesDecremented = false;
             if (httpRequestMatcher.matches(httpRequest, httpRequest)) {
-                matchingExpectation = httpRequestMatcher.decrementRemainingMatches();
+                matchingExpectation = httpRequestMatcher.getExpectation();
+                if (matchingExpectation.decrementRemainingMatches()) {
+                    remainingMatchesDecremented = true;
+                }
             }
             if (!httpRequestMatcher.isActive()) {
                 removeHttpRequestMatcher(httpRequestMatcher);
+            } else if (remainingMatchesDecremented) {
+                // only update remaining matches if expectation not
+                // being removed completely to avoid double events
+                notifyListeners(this);
             }
             if (matchingExpectation != null) {
                 break;
@@ -110,15 +119,18 @@ public class MockServerMatcher extends MockServerMatcherNotifier {
     }
 
     public List<Expectation> retrieveActiveExpectations(HttpRequest httpRequest) {
-        List<Expectation> expectations = new ArrayList<>();
-        HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
-        for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
-            if (httpRequest == null ||
-                requestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
-                expectations.add(httpRequestMatcher.getExpectation());
+        if (httpRequest == null) {
+            return httpRequestMatchers.stream().map(HttpRequestMatcher::getExpectation).collect(Collectors.toList());
+        } else {
+            List<Expectation> expectations = new ArrayList<>();
+            HttpRequestMatcher requestMatcher = matcherBuilder.transformsToMatcher(httpRequest);
+            for (HttpRequestMatcher httpRequestMatcher : cloneMatchers()) {
+                if (requestMatcher.matches(httpRequestMatcher.getExpectation().getHttpRequest())) {
+                    expectations.add(httpRequestMatcher.getExpectation());
+                }
             }
+            return expectations;
         }
-        return expectations;
     }
 
     public boolean isEmpty() {

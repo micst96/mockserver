@@ -1,6 +1,5 @@
 package org.mockserver.serialization.deserializers.body;
 
-import com.google.common.net.MediaType;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.text.StringEscapeUtils;
 import org.junit.Test;
@@ -889,6 +888,30 @@ public class BodyDTODeserializerTest {
             .setHttpRequest(
                 new HttpRequestDTO()
                     .setBody(new JsonBodyDTO(new JsonBody("{\"employees\":[{\"firstName\":\"John\",\"lastName\":\"Doe\"}]}")))
+            ), expectationDTO);
+    }
+
+    @Test
+    public void shouldParseJsonWithJsonBodyAsObjectField() throws IOException {
+        // given
+        String json = ("{" + NEW_LINE +
+            "    \"httpRequest\": {" + NEW_LINE +
+            "        \"body\": {" + NEW_LINE +
+            "            \"type\": \"JSON\"," + NEW_LINE +
+            "            \"json\": {\"context\": [{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"},{\"source\": \"DECISION_REQUEST\"}]}," + NEW_LINE +
+            "            \"matchType\" : \"ONLY_MATCHING_FIELDS\"" + NEW_LINE +
+            "        }" + NEW_LINE +
+            "    }" + NEW_LINE +
+            "}");
+
+        // when
+        ExpectationDTO expectationDTO = ObjectMapperFactory.createObjectMapper().readValue(json, ExpectationDTO.class);
+
+        // then
+        assertEquals(new ExpectationDTO()
+            .setHttpRequest(
+                new HttpRequestDTO()
+                    .setBody(new JsonBodyDTO(new JsonBody("{\"context\":[{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"},{\"source\":\"DECISION_REQUEST\"}]}")))
             ), expectationDTO);
     }
 

@@ -64,7 +64,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
 
         pipeline.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
 
-        pipeline.addLast(new WebSocketServerHandler(mockServerLogger, registeredClients, websocketChannels, textWebSocketFrames));
+        pipeline.addLast(new WebSocketServerHandler(mockServerLogger, registeredClients, websocketChannels, textWebSocketFrames, secure));
 
         pipeline.addLast(new MockServerServerCodec(mockServerLogger, secure));
 
@@ -76,8 +76,7 @@ public class EchoServerInitializer extends ChannelInitializer<SocketChannel> {
             error,
             mockServerLogger,
             channel.attr(LOG_FILTER).get(),
-            channel.attr(NEXT_RESPONSE).get(),
-            channel.attr(ONLY_RESPONSE).get()
+            channel.attr(NEXT_RESPONSE).get()
         ));
     }
 }

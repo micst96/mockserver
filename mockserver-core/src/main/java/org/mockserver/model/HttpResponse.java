@@ -2,7 +2,6 @@ package org.mockserver.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Multimap;
-import com.google.common.net.MediaType;
 import io.netty.handler.codec.http.cookie.ClientCookieDecoder;
 
 import java.nio.charset.Charset;
@@ -506,7 +505,7 @@ public class HttpResponse extends Action<HttpResponse> implements HttpObject<Htt
             withReasonPhrase(replaceResponse.getReasonPhrase());
         }
         for (Header header : replaceResponse.getHeaderList()) {
-            getHeaders().replaceEntry(header);
+            getOrCreateHeaders().replaceEntry(header);
         }
         for (Cookie cookie : replaceResponse.getCookieList()) {
             withCookie(cookie);

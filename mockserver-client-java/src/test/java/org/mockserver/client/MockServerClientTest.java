@@ -1,10 +1,12 @@
 package org.mockserver.client;
 
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockserver.Version;
@@ -62,6 +64,9 @@ public class MockServerClientTest {
     @InjectMocks
     private MockServerClient mockServerClient;
 
+    @Captor
+    ArgumentCaptor<HttpRequest> httpRequestArgumentCaptor;
+
     @Before
     public void setupTestFixture() {
         mockServerClient = new MockServerClient("localhost", 1080);
@@ -77,6 +82,34 @@ public class MockServerClientTest {
 
         // when
         new MockServerClient(null, 1080);
+    }
+
+    @Test
+    public void shouldHandleNullHttpRequestEnhancerException() {
+        // then
+        exception.expect(IllegalArgumentException.class);
+        exception.expectMessage(containsString("Request with default properties can not be null"));
+
+        mockServerClient.setRequestOverride(null);
+    }
+
+    @Test
+    public void shouldEnhanceRequestWithAuthorizationHeader() {
+        // given
+        String authorizationKey = "Authorization";
+        String authorizationHeaderValue = "Basic dGVzdFVzZXI6dGVzdA==";
+        HttpRequest defaultRequestProperties = new HttpRequest();
+        defaultRequestProperties.withHeader(authorizationKey, authorizationHeaderValue);
+
+        // when
+        mockServerClient
+            .setRequestOverride(defaultRequestProperties)
+            .reset();
+
+        // then
+        verify(mockHttpClient).sendRequest(httpRequestArgumentCaptor.capture(), anyInt(), any(TimeUnit.class));
+        List<String> authorizationHeader = httpRequestArgumentCaptor.getValue().getHeader(authorizationKey);
+        assertTrue(authorizationHeader.contains(authorizationHeaderValue));
     }
 
     @Test

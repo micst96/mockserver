@@ -4,13 +4,19 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mockserver.configuration.ConfigurationProperties;
 import org.mockserver.file.FileReader;
+import org.mockserver.log.model.LogEntry;
 import org.mockserver.logging.MockServerLogger;
 import org.mockserver.mock.Expectation;
+import org.mockserver.mock.MockServerMatcher;
 import org.mockserver.serialization.ExpectationSerializer;
+import org.slf4j.event.Level;
 
 import java.lang.reflect.Constructor;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mockserver.log.model.LogEntry.LogMessageType.CREATED_EXPECTATION;
+import static org.mockserver.log.model.LogEntry.LogMessageType.SERVER_CONFIGURATION;
+import static org.slf4j.event.Level.WARN;
 
 /**
  * @author jamesdbloom
@@ -18,9 +24,28 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 public class ExpectationInitializerLoader {
 
     private final ExpectationSerializer expectationSerializer;
+    private final MockServerLogger mockServerLogger;
+    private final MockServerMatcher mockServerMatcher;
 
-    public ExpectationInitializerLoader(MockServerLogger mockServerLogger) {
+    public ExpectationInitializerLoader(MockServerLogger mockServerLogger, MockServerMatcher mockServerMatcher) {
         expectationSerializer = new ExpectationSerializer(mockServerLogger);
+        this.mockServerLogger = mockServerLogger;
+        this.mockServerMatcher = mockServerMatcher;
+        addExpectationsFromInitializer();
+    }
+
+    private void addExpectationsFromInitializer() {
+        for (Expectation expectation : loadExpectations()) {
+            mockServerMatcher.add(expectation);
+            mockServerLogger.logEvent(
+                new LogEntry()
+                    .setType(CREATED_EXPECTATION)
+                    .setLogLevel(Level.INFO)
+                    .setHttpRequest(expectation.getHttpRequest())
+                    .setMessageFormat("creating expectation:{}")
+                    .setArguments(expectation.clone())
+            );
+        }
     }
 
     private Expectation[] retrieveExpectationsFromInitializerClass() {
@@ -45,7 +70,17 @@ public class ExpectationInitializerLoader {
     private Expectation[] retrieveExpectationsFromJson() {
         String initializationJsonPath = ConfigurationProperties.initializationJsonPath();
         if (isNotBlank(initializationJsonPath)) {
-            return expectationSerializer.deserializeArray(FileReader.readFileFromClassPathOrPath(initializationJsonPath));
+            try {
+                return expectationSerializer.deserializeArray(FileReader.readFileFromClassPathOrPath(initializationJsonPath));
+            } catch (Throwable throwable) {
+                mockServerLogger.logEvent(
+                    new LogEntry()
+                        .setType(SERVER_CONFIGURATION)
+                        .setLogLevel(WARN)
+                        .setMessageFormat("Exception while loading JSON initialization file, ignoring file")
+                        .setThrowable(throwable)
+                );
+            }
         }
         return new Expectation[0];
     }
